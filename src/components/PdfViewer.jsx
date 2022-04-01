@@ -189,7 +189,7 @@ const PdfViewer = () => {
                       let newPdfDocPage = await newPdfDoc.getPage(1);
                       if (newPdfDocPage) {
                         try {                          
-                          newPdfDoc.pagePushBack(newPdfDocPage);
+                          // newPdfDoc.pagePushBack(newPdfDocPage); //commented this code because it was creating more then 1 pages
           
                           // save sign in local
                           let signs = localStorage.getItem("signs");
