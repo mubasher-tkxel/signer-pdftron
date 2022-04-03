@@ -28,3 +28,7 @@
   margin: 0 auto;
   background-color: #fff;
 }
+
+body > div.fade.modal.show > div > div > div.modal-body > div > div {
+  height: 400px !important;
+}

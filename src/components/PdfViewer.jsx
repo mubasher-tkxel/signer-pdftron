@@ -44,18 +44,132 @@ const PdfViewer = () => {
         const { Feature } = instance.UI;
         instance.UI.enableFeatures([Feature.FilePicker]);
 
-        // detect if the document loaded or not
+        const signatureTool = documentViewer.getTool('AnnotationCreateSignature');
+                   
+        signatureTool.addEventListener('locationSelected', (e) => {
+          handleShow();
+          console.log("eeeee",e);
+          let getAllItems = localStorage.getItem("AllSignObjects");
+          getAllItems = JSON.parse(getAllItems);
 
-        documentViewer.addEventListener("documentLoaded", async() => {
-          localStorage.removeItem("signs");
+          const keys  = Object.keys(getAllItems);
+          for(const a of keys){
+              const obj = getAllItems[a];
+              
+          }
+
+          setTimeout(()=>{
+            // handleShow();
+            instance.UI.closeElements(['signatureModal']);
+          },1000);
+          // instance.UI.closeElements(['signatureModal']);
+          debugger;
         });
 
+        // detect if the document loaded or not
+        documentViewer.addEventListener("documentLoaded", async() => {
+          debugger;
+          localStorage.removeItem("signs");
+          const doc = instance.Core.documentViewer.getDocument();
+          const pageText = await doc.loadPageText(1);
+          let text = await doc.loadPageText(1);
+          text= text.split("\n");
+          let signIndex={};
+          console.log("TEXT",text);
+          let fieldCount=0;
+          for(const t of text)
+          {
+            if(/\{\{\w:\w;\w:\w;\w:”\w+”;\}\}/gi.exec(t)){
+              const key = /\{\{\w:\w;\w:\w;\w:”\w+”;\}\}/gi.exec(t)[0];
+              const startIndex = pageText.indexOf(key);
+              const endIndex = startIndex + key.length;
+              console.log(`start index:::${startIndex}, end index::: ${endIndex} , key: ${key}`)
+              
+              const quadsForRectangle = await doc.getTextPosition(
+                1,
+                startIndex,
+                endIndex + 1
+              );
+
+              //remove start
+             // set flags for required
+              const flags = new Annotations.WidgetFlags();
+              flags.set('Required', true);
+
+              // create a form field
+              const field = new Annotations.Forms.Field(`Sign here ${fieldCount}`, { 
+                type: 'Sig', 
+                flags,
+              });
+
+              signIndex[key] = {
+                x:startIndex,
+                y:endIndex,
+                fieldName : `Sign here ${fieldCount}`
+              }
+
+              fieldCount++;
+
+              // create a widget annotation
+              const widgetAnnot = new Annotations.SignatureWidgetAnnotation(field, {
+                appearance: '_DEFAULT',
+                appearances: {
+                  _DEFAULT: {
+                    Normal: {
+                      data:
+                        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjEuMWMqnEsAAAANSURBVBhXY/j//z8DAAj8Av6IXwbgAAAAAElFTkSuQmCC',
+                      offset: {
+                        x: 100,
+                        y: 100,
+                      },
+                    },
+                  },
+                },
+              });
+
+              // set position and size
+              widgetAnnot.PageNumber = 1;
+              widgetAnnot.X = quadsForRectangle[0].x1 + 2;
+              widgetAnnot.Y = quadsForRectangle[0].y1 - 20;
+              widgetAnnot.Width = 110;
+              widgetAnnot.Height = 25;
+              widgetAnnot.LockedContents=true;
+              widgetAnnot.Locked=true;
+              widgetAnnot.FillColor = new Annotations.Color(255, 255, 255);
+              widgetAnnot.StrokeColor = new Annotations.Color(255,255, 255);
+              
+              //add the form field and widget annotation
+              annotationManager.getFieldManager().addField(field);
+              annotationManager.addAnnotation(widgetAnnot);
+              annotationManager.drawAnnotationsFromList([widgetAnnot]);
+            }
+          }          
+          console.log("WHOLE OBJJJ",signIndex)
+          localStorage.setItem("AllSignObjects",JSON.stringify(signIndex));
+        });
         instance.UI.setHeaderItems((header) => {
           header.push({
             type: "actionButton",
             img:
               "data:image/png;base64,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",
             onClick: async () => {
+              // const doc = await documentViewer.getDocument()
+              // console.log("DOC _____", doc);
+              // const xfdfString = await annotationManager.exportAnnotations()
+              // const data = await doc.getFileData({
+              //   xfdfString,
+              //   flags: SaveOptions.LINEARIZED,
+              //   downloadType: 'pdf'
+              // })
+              // console.log("DATA _____", data);
+              // const arr = new Uint8Array(data)
+              // console.log("arr   ----->", arr)
+              // const blob = new Blob([arr], {
+              //   type: 'application/pdf'
+              // })
+              // console.log("blob   ----->", blob)
+              // saveAs(blob, 'updated.pdf')
+
               const mainFunc = async () => {
                 try {
                   console.log("IN MAIN");
@@ -125,24 +239,23 @@ const PdfViewer = () => {
 
                     endIndex = startIndex + searchTerm.length;
 
-
-                    // set rectangle on the tag
                     const quadsForRectangle = await newDoc.getTextPosition(
                       pageNumber,
                       startIndex,
                       endIndex + 1
                     );
 
+
                     // Get text position for each letter in the 'searchTerm' found
                     // 'quads' will contain an array for each character between the start and end indexes
-                    const quads = await newDoc.getTextPosition(
-                      pageNumber,
-                      endIndex,
-                      endIndex + 1
-                    );
+                  //   const quads = await newDoc.getTextPosition(
+                  //     pageNumber,
+                  //     endIndex,
+                  //     endIndex + 1
+                  //   );
                     
 
-                    console.log("COODS: ---->", quadsForRectangle);
+                  //   console.log("COODS: ---->", quadsForRectangle);
 
                     let pageHeight = await documentViewer.getPageHeight(1);
                     console.log("PAGE Height: ---->", pageHeight);
@@ -181,6 +294,11 @@ const PdfViewer = () => {
                     writer2.writePlacedElement(element2);
                     writer2.end();
                 
+                    // remove signture annotation after sign
+                    const fieldManager = annotationManager.getFieldManager();
+                    const field = fieldManager.getField('Sign here 0');
+                    annotationManager.deleteAnnotations(field.widgets);
+
 
                     // add the page to the document
 
@@ -189,7 +307,7 @@ const PdfViewer = () => {
                       let newPdfDocPage = await newPdfDoc.getPage(1);
                       if (newPdfDocPage) {
                         try {                          
-                          // newPdfDoc.pagePushBack(newPdfDocPage); //commented this code because it was creating more then 1 pages
+                          // newPdfDoc.pagePushBack(newPdfDocPage);
           
                           // save sign in local
                           let signs = localStorage.getItem("signs");
@@ -538,7 +656,7 @@ const PdfViewer = () => {
         Add Signature
       </Button>
 
-      <Modal show={show} onHide={handleClose}>
+      <Modal size="lg"  centered show={show} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Modal heading</Modal.Title>
         </Modal.Header>
@@ -587,14 +705,7 @@ const PdfViewer = () => {
             Add Signature
           </Button>
         </Modal.Body>
-      </Modal>
-      {/* <Button variant="primary" onClick={() => {
-        docViewerIns.refreshAll();
-        docViewerIns.updateView();
-
-      }}>
-        Update View
-      </Button> */}      
+      </Modal>    
       <div className="webviewer" ref={viewer}></div>
     </div>
   );
