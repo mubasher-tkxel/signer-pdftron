@@ -116,7 +116,7 @@ const PdfViewer = () => {
                 startIndex,
                 endIndex + 1
               );
-debugger;
+
               //remove start
              // set flags for required
               const flags = new Annotations.WidgetFlags();
@@ -312,7 +312,7 @@ debugger;
                   const builder2 = await PDFNet.ElementBuilder.create(); 
                     let element2 = await builder2.createImageScaled(
                       signatureImg,
-                      quadsForRectangle[0].x2 + 20,
+                      quadsForRectangle[0].x2,
                       pageHeight - quadsForRectangle[0].y2 - 35,
                       150,
                       100
