@@ -53,11 +53,36 @@ const PdfViewer = () => {
           getAllItems = JSON.parse(getAllItems);
 
           const keys  = Object.keys(getAllItems);
-          for(const a of keys){
-              const obj = getAllItems[a];
-              
-          }
+          let value=[];
+          let difference = 0;
 
+              for(const a of keys){
+                  const obj = getAllItems[a];
+                  difference = Math.abs(obj['y'] - e.y);
+                  value.push({
+                      key:a,
+                      difference,
+                      fieldName:obj.fieldName
+                  });
+              }
+
+               console.log(value)
+
+              // get lowest differene obj
+              let min = {
+                difference: 999,
+                fieldName:''
+              };
+              value.forEach((item)=>
+              {
+                  if(item.difference <min.difference)
+                      {
+                          min = item;
+                      }
+              })
+            localStorage.setItem("field",min.key);
+            localStorage.setItem("fieldName",min.fieldName);
+              
           setTimeout(()=>{
             // handleShow();
             instance.UI.closeElements(['signatureModal']);
@@ -79,8 +104,9 @@ const PdfViewer = () => {
           let fieldCount=0;
           for(const t of text)
           {
-            if(/\{\{\w:\w;\w:\w;\w:”\w+”;\}\}/gi.exec(t)){
-              const key = /\{\{\w:\w;\w:\w;\w:”\w+”;\}\}/gi.exec(t)[0];
+            const result = /\{\{\w:\w;\w:\w;\w:[”"]\w+[”"];\}\}/gi.exec(t)
+            if(result){
+              const key = result[0];
               const startIndex = pageText.indexOf(key);
               const endIndex = startIndex + key.length;
               console.log(`start index:::${startIndex}, end index::: ${endIndex} , key: ${key}`)
@@ -90,7 +116,7 @@ const PdfViewer = () => {
                 startIndex,
                 endIndex + 1
               );
-
+debugger;
               //remove start
              // set flags for required
               const flags = new Annotations.WidgetFlags();
@@ -104,7 +130,8 @@ const PdfViewer = () => {
 
               signIndex[key] = {
                 x:startIndex,
-                y:endIndex,
+                // y:endIndex,
+                y:quadsForRectangle[quadsForRectangle.length-1].y2,
                 fieldName : `Sign here ${fieldCount}`
               }
 
@@ -131,10 +158,10 @@ const PdfViewer = () => {
               widgetAnnot.PageNumber = 1;
               widgetAnnot.X = quadsForRectangle[0].x1 + 2;
               widgetAnnot.Y = quadsForRectangle[0].y1 - 20;
-              widgetAnnot.Width = 110;
+              widgetAnnot.Width = 60;
               widgetAnnot.Height = 25;
-              widgetAnnot.LockedContents=true;
-              widgetAnnot.Locked=true;
+              widgetAnnot.LockedContents=false;
+              widgetAnnot.Locked=false;
               widgetAnnot.FillColor = new Annotations.Color(255, 255, 255);
               widgetAnnot.StrokeColor = new Annotations.Color(255,255, 255);
               
@@ -293,12 +320,12 @@ const PdfViewer = () => {
 
                     writer2.writePlacedElement(element2);
                     writer2.end();
-                
-                    // remove signture annotation after sign
-                    const fieldManager = annotationManager.getFieldManager();
-                    const field = fieldManager.getField('Sign here 0');
-                    annotationManager.deleteAnnotations(field.widgets);
+                debugger;
 
+                      // remove signture annotation after sign
+                      const fieldManager = annotationManager.getFieldManager();
+                      const field = fieldManager.getField(localStorage.getItem("fieldName"));
+                      annotationManager.deleteAnnotation(field.widgets);
 
                     // add the page to the document
 
@@ -340,7 +367,7 @@ const PdfViewer = () => {
                     // Update viewer with new document
                     documentViewer.refreshAll();
                     documentViewer.updateView();
-
+                  
                     // saving PDF
                     // const docbuf = await newPdfDoc.saveMemoryBuffer(PDFNet.SDFDoc.SaveOptions.e_linearized);
                     // const blob = new Blob([docbuf], {
@@ -353,31 +380,6 @@ const PdfViewer = () => {
 
                     console.log("Done. Result saved in addimage.pdf...");
                   }
-
-                  // const doc = await documentViewer.getDocument()
-                  // console.log("DOC _____", doc);
-                  // const xfdfString = await annotationManager.exportAnnotations()
-                  // const data = await doc.getFileData({
-                  //   xfdfString,
-                  //   flags: SaveOptions.LINEARIZED,
-                  //   downloadType: 'pdf'
-                  // })
-                  // console.log("DATA _____", data);
-                  // const arr = new Uint8Array(data)
-                  // console.log("arr   ----->", arr)
-                  // const blob = new Blob([arr], {
-                  //   type: 'application/pdf'
-                  // })
-                  // console.log("blob   ----->", blob)
-                  // saveAs(blob, 'updated.pdf')
-
-                  // For PNG
-                  // let img = await PDFNet.Image.createFromURL(newDoc, './assets/ss.png');
-                  // console.log("IMG PATH --> ", img)
-                  // let matrix = await PDFNet.Matrix2D.create(await img.getImageWidth(), 0, 0, await img.getImageHeight(), 300, 500);
-                  // console.log("after matrix")
-                  // let element = await builder.createImageFromMatrix(img, matrix);
-                  // writer.writePlacedElement(element)
                 } catch (error) {
                   console.log(error);
                 }
@@ -522,121 +524,6 @@ const PdfViewer = () => {
             },
           });
         });
-
-        documentViewer.addEventListener("documentLoaded", async () => {
-         
-          // async function main() {
-          
-          //   const newDoc = await documentViewer.getDocument();
-          //   const doc = await newDoc.getPDFDoc();
-          //   const page = await doc.getPage(1);
-
-          //   const txt = await PDFNet.TextExtractor.create();
-          //   const rect = await page.getCropBox();
-          //   txt.begin(page, rect); // Read the page.
-
-          //   let parsedData = [];
-
-          //   // Extract words one by one.
-          //   let line = await txt.getFirstLine();
-
-          //   let docTitle = "";
-          //   // extracting title
-          //   for (
-          //     let word = await line.getFirstWord();
-          //     await word.isValid();
-          //     word = await word.getNextWord()
-          //   ) {
-          //     docTitle += (await word.getString()) + " ";
-          //   }
-          //   parsedData.push({
-          //     title: docTitle,
-          //   });
-
-          //   line = await line.getNextLine();
-
-          //   let key = "";
-          //   let value = "";
-
-          //   for (; await line.isValid(); line = await line.getNextLine()) {
-          //     // console.log("in loop");
-          //     // first word stats
-          //     let word = await line.getFirstWord();
-          //     let wordStyle = await word.getStyle();
-          //     let wordSize = await wordStyle.getFontSize();
-          //     wordSize = parseInt(wordSize);
-
-          //     // console.log(wordSize);
-          //     // console.log(await wordStyle.getWeight());
-
-          //     // next first word stats
-          //     let nextFirstLine = await line.getNextLine();
-
-          //     if (await nextFirstLine.isValid()) {
-          //       let nextFirstWord = await nextFirstLine.getFirstWord();
-          //       let nextFirstWordStyle = await nextFirstWord.getStyle();
-          //       let nextFirstWordSize = await nextFirstWordStyle.getFontSize();
-          //       nextFirstWordSize = parseInt(nextFirstWordSize);
-
-          //       // console.log(nextFirstWordSize);
-          //       // console.log(await wordStyle.getWeight());
-
-          //       if (wordSize == 12) {
-          //         for (
-          //           let word = await line.getFirstWord();
-          //           await word.isValid();
-          //           word = await word.getNextWord()
-          //         ) {
-          //           // console.log("key");
-          //           key += (await word.getString()) + " ";
-          //         }
-          //       } else if (wordSize != 12 && nextFirstWordSize != 12) {
-          //         for (
-          //           let word = await line.getFirstWord();
-          //           await word.isValid();
-          //           word = await word.getNextWord()
-          //         ) {
-          //           // console.log("value");
-          //           value += (await word.getString()) + " ";
-          //         }
-          //       } else if (wordSize != 12 && nextFirstWordSize == 12) {
-          //         // console.log("summing up");
-          //         for (
-          //           let word = await line.getFirstWord();
-          //           await word.isValid();
-          //           word = await word.getNextWord()
-          //         ) {
-          //           value += (await word.getString()) + " ";
-          //         }
-          //         let parsedInfo = {};
-          //         key = key.replace(":", "");
-          //         parsedInfo[key] = value;
-          //         parsedData.push(parsedInfo);
-          //         key = "";
-          //         value = "";
-          //       }
-          //     } else {
-          //       // console.log("summing up");
-          //       for (
-          //         let word = await line.getFirstWord();
-          //         await word.isValid();
-          //         word = await word.getNextWord()
-          //       ) {
-          //         value += (await word.getString()) + " ";
-          //       }
-          //       let parsedInfo = {};
-          //       key = key.replace(":", "");
-          //       parsedInfo[key] = value;
-          //       parsedData.push(parsedInfo);
-          //       key = "";
-          //       value = "";
-          //     }
-          //   }
-
-          //   console.log("parsedData");
-          //   console.log(parsedData);
-          // }
-        });
       })
       .catch((err) => console.log(err));
   }, []);
@@ -652,9 +539,9 @@ const PdfViewer = () => {
   return (
     <div className="App">
       <div className="header">React sample</div>
-      <Button variant="primary" onClick={handleShow}>
+      {/* <Button variant="primary" onClick={handleShow}>
         Add Signature
-      </Button>
+      </Button> */}
 
       <Modal size="lg"  centered show={show} onHide={handleClose}>
         <Modal.Header closeButton>
@@ -662,6 +549,7 @@ const PdfViewer = () => {
         </Modal.Header>
         <Modal.Body>
           <input
+            hidden={true}
             onChange={(e) => localStorage.setItem("field", e.target.value)}
             style={{
               width: "100%",
@@ -688,8 +576,8 @@ const PdfViewer = () => {
               <SignaturePad
                 penColor="green"
                 canvasProps={{
-                  width: 440,
-                  height: 100,
+                  width: 760,
+                  height: 400,
                   className: "sigCanvas",
                 }}
                 ref={sigRef}
