@@ -486,7 +486,7 @@ const PdfViewer = () => {
               style={{
                 border: "2px solid red",
                 width: "100%",
-                height: 100,
+                height: 200,
                 alignSelf: "center",
                 marginTop: 10,
                 marginBottom: 10,
@@ -496,7 +496,7 @@ const PdfViewer = () => {
                 penColor="green"
                 canvasProps={{
                   width: 440,
-                  height: 100,
+                  height: 200,
                   className: "sigCanvas",
                 }}
                 ref={sigRef}
