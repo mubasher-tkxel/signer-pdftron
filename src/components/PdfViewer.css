@@ -1,0 +1,17 @@
+.input_width{
+    width: 100%;
+}
+
+.signaturePad__header{
+    display: contents;
+    align-items: center;
+    width: 100%;
+}
+.signaturePad__container{
+    border: 2px solid red;
+    width: 100%;
+    height: 200;
+    align-self: center;
+    margin-top: 10;
+    margin-bottom: 10;
+}

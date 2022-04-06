@@ -1,13 +1,11 @@
 import React from "react";
-import PdfViewer from "./components/PdfViewer";
-import { ToastContainer } from "react-toastify";
+import Home from "./Layout/Home";
 import "./App.css";
 
 const App = () => {
   return (
     <>
-      <PdfViewer />
-      <ToastContainer />
+      <Home />
     </>
   );
 };
