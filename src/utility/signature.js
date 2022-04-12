@@ -115,6 +115,95 @@ export const createSignAnnotations = async (
   }
 };
 
+export const loadDatePickers = async (
+  instance,
+  Annotations,
+  annotationManager
+) => {
+  const doc = instance.Core.documentViewer.getDocument();
+  const pageText = await doc.loadPageText(1);
+  const startIndex = pageText.indexOf("CurrentDate");
+  const endIndex = startIndex + "CurrentDate".length;
+
+  const quadsForRectangle = await doc.getTextPosition(
+    1,
+    startIndex,
+    endIndex + 1
+  );
+
+  /* create a form field */
+  const flags = new Annotations.WidgetFlags();
+  const formField = new Annotations.Forms.Field(`datePicker`, {
+    type: "tx",
+    flags,
+  });
+
+  const datePickerAnnotation = new Annotations.DatePickerWidgetAnnotation(
+    formField
+  );
+  datePickerAnnotation.datePickerOptions = {
+    isRTL: true, // reverse the calendar for right-to-left languages
+    firstDay: 1, //first day of the week (0: Sunday, 1: Monday, etc)
+    i18n: {
+      previousMonth: "Previous Month",
+      nextMonth: "Next Month",
+      months: [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ],
+      monthsShort: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ],
+      weekdays: [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ],
+      weekdaysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      invalidDateTime: "Custom error message",
+    }, // language defaults for month and weekday names
+    yearRange: [1900, 2015], // number of years either side (e.g. 10) or array of upper/lower range
+  };
+
+  datePickerAnnotation.X = quadsForRectangle[0].x1 + 100;
+  datePickerAnnotation.Y = quadsForRectangle[0].y1 - 58;
+  datePickerAnnotation.Width = 150;
+  datePickerAnnotation.Height = 100;
+  datePickerAnnotation.font.size = 20;
+  datePickerAnnotation.Id = "DatePicker_1";
+  datePickerAnnotation.FillColor = new Annotations.Color(0, 255, 255);
+  datePickerAnnotation.StrokeColor = new Annotations.Color(0, 0, 0);
+  annotationManager.addAnnotation(datePickerAnnotation);
+  annotationManager.redrawAnnotation(datePickerAnnotation);
+  annotationManager.addAnnotation(datePickerAnnotation);
+  annotationManager.drawAnnotationsFromList([datePickerAnnotation]);
+};
+
 export const loadSignAnnotations = async (
   instance,
   Annotations,

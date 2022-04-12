@@ -8,6 +8,7 @@ import { Button, Modal } from "react-bootstrap";
 import {
   CANVAS_PROPS,
   loadSignAnnotations,
+  loadDatePickers,
   signatureClicked,
   viewers,
   WEBVIEWER_FILE_PATH,
@@ -53,6 +54,7 @@ const PdfViewer = () => {
         const { Feature } = instance.UI;
         instance.UI.enableFeatures([Feature.FilePicker]);
         instance.UI.disableElements(["signatureModal"]);
+        instance.UI.enableElements(["contentEditButton"]);
 
         const signatureTool = documentViewer.getTool(
           "AnnotationCreateSignature"
@@ -72,6 +74,7 @@ const PdfViewer = () => {
         /* detect if the document loaded */
         documentViewer.addEventListener("documentLoaded", async () => {
           await loadSignAnnotations(instance, Annotations, annotationManager);
+          await loadDatePickers(instance, Annotations, annotationManager);
         });
 
         instance.UI.setHeaderItems((header) => {
